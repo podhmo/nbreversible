@@ -86,7 +86,7 @@ print(list(range(5)))
 Later we will see more functions that return iterables and take iterables as argument.
 """
 """
-4.4. break and continue Statements, and else Clauses on Loops
+## break and continue Statements, and else Clauses on Loops
 
 The break statement, like in C, breaks out of the innermost enclosing for or while loop.
 
@@ -115,7 +115,7 @@ for num in range(2, 10):
         continue
     print("Found a number", num)
 """
-4.5. pass Statements
+## pass Statements
 
 The pass statement does nothing. It can be used when a statement is required syntactically but the program requires no action. For example:
 """

@@ -143,7 +143,7 @@ Later we will see more functions that return iterables and take iterables as arg
 
 
 
-4.4. break and continue Statements, and else Clauses on Loops
+## break and continue Statements, and else Clauses on Loops
 
 The break statement, like in C, breaks out of the innermost enclosing for or while loop.
 
@@ -196,7 +196,7 @@ for num in range(2, 10):
 ```
 
 
-4.5. pass Statements
+## pass Statements
 
 The pass statement does nothing. It can be used when a statement is required syntactically but the program requires no action. For example:
 
@@ -259,7 +259,7 @@ print(fib)
 f = fib
 f(100)
 
-# <function fib at 0x109040950>
+# <function fib at 0x10e66a9d8>
 # 0 1 1 2 3 5 8 13 21 34 55 89
 ```
 
@@ -493,9 +493,9 @@ cheeseshop(
 # It's very runny, sir.
 # It's really very, VERY runny, sir.
 # ----------------------------------------
-# client : John Cleese
 # sketch : Cheese Shop Sketch
 # shopkeeper : Michael Palin
+# client : John Cleese
 ```
 
 and of course it would print:
