@@ -31,15 +31,21 @@ def markdown(capture):
 
 @contextlib.contextmanager
 def notebook(capture):
-    from nbformat.v4 import new_code_cell, new_notebook, writes_json
+    from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook, writes_json
 
     notebook = new_notebook()
     i = 0
 
     def reaction(event, buf):
         nonlocal i
-        i += 1
-        notebook["cells"].append(new_code_cell("".join(buf), execution_count=i))
+        if event.name == "markdown":
+            output = "".join(buf).strip().strip("'").strip('"')
+            notebook["cells"].append(new_markdown_cell(output))
+        elif event.name == "python":
+            i += 1
+            notebook["cells"].append(new_code_cell("".join(buf), execution_count=i))
+        else:
+            raise NotImplemented(event.name)
 
     yield reaction
     print(writes_json(notebook))
