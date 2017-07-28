@@ -1,4 +1,4 @@
-TARGET=00pretty
+TARGET=01controlflow
 
 default:
 	# markdown

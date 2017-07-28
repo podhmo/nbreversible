@@ -44,7 +44,7 @@ class Visitor(StrictPyTreeVisitor):
     def visit_decorated(self, node):
         self.collector.collect(node, event=self.collector.events.CODE)
 
-    visit_try_stmt = visit_if_stmt = visit_funcdef = visit_classdef = visit_decorated
+    visit_for_stmt = visit_try_stmt = visit_if_stmt = visit_funcdef = visit_classdef = visit_decorated
 
     def visit_with_stmt(self, node):
         if node.children[1].children[0].value == self.marker:
@@ -90,7 +90,7 @@ class MarkdownCellEvent:
 
     def markdown(self, val, file=sys.stdout):
         print("", file=file)
-        print("".join(val).strip("'").strip('"'), file=file)
+        print("".join(val).strip().strip("'").strip('"'), file=file)
         print("", file=file)
 
 
