@@ -1,4 +1,5 @@
 import sys
+import contextlib
 from .parselib import StrictPyTreeVisitor
 from lib2to3.pygram import python_symbols as syms
 from lib2to3.pgen2 import token
@@ -73,9 +74,11 @@ class PyCellEvent:
     def add(self, stmt):
         self.buf.append(str(stmt))
 
+    @contextlib.contextmanager
     def markdown(self, val, file=sys.stdout):
         print("``` {}".format(self.name), file=file)
         print("".join(val).strip(), file=file)
+        yield
         print("```", file=file)
 
 
@@ -88,9 +91,11 @@ class MarkdownCellEvent:
     def add(self, stmt):
         self.buf.append(str(stmt))
 
+    @contextlib.contextmanager
     def markdown(self, val, file=sys.stdout):
         print("", file=file)
         print("".join(val).strip().strip("'").strip('"'), file=file)
+        yield
         print("", file=file)
 
 
