@@ -47,5 +47,7 @@ setup(
     tests_require=tests_require,
     test_suite="nbreversible.tests",
     entry_points="""
+    [console_scripts]
+    nbreversible = nbreversible.__main__:main
 """
 )
