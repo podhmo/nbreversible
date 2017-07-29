@@ -1,32 +1,23 @@
 import sys
 import contextlib
-from .parselib import StrictPyTreeVisitor
+from .parselib import (
+    StrictPyTreeVisitor,
+    PyTreeVisitor,
+)
 from lib2to3.pygram import python_symbols as syms
 from lib2to3.pgen2 import token
+from lib2to3.pytree import Leaf
 
 
-def extract_inner_block(node):
-    found = None
-    for c in node.children:
-        if c.type == syms.suite:
-            found = c
-            break
+class _LiftupVisitor(PyTreeVisitor):
+    def __init__(self, indent):
+        self.indent = indent
 
-    indent_level = 0
-    indent = None
-    for line in found.children:
-        if line.type == token.INDENT:
-            indent_level += 1
-            indent = line
-            continue
-        if line.type == token.DEDENT:
-            indent_level -= 1
-            if indent_level <= 0:
-                break
-        if indent_level > 0:
-            line = line.clone()
-            line.prefix = line.prefix.replace(indent.value * indent_level, "")
-            yield line
+    def visit_INDENT(self, node):
+        node.value = node.value.replace(self.indent.value, "", 1)
+
+    def visit_DEDENT(self, node):
+        node.prefix = node.prefix.replace(self.indent.value, "", 1)
 
 
 class Visitor(StrictPyTreeVisitor):
@@ -59,6 +50,30 @@ class Visitor(StrictPyTreeVisitor):
 
     def visit_ENDMARKER(self, node):
         self.collector.consume()
+
+
+def extract_inner_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    "))):
+    found = None
+    for c in node.children:
+        if c.type == syms.suite:
+            found = c
+            break
+
+    indent_level = 0
+    for subnode in found.children:
+        if subnode.type == token.INDENT:
+            indent_level += 1
+            continue
+        if subnode.type == token.DEDENT:
+            indent_level -= 1
+            if indent_level <= 0:
+                break
+        if indent_level > 0:
+            subnode = subnode.clone()
+            subnode.prefix = subnode.prefix.replace(liftup_visitor.indent.value, "", 1)
+            if subnode.type != syms.simple_stmt:
+                liftup_visitor.visit(subnode)
+            yield subnode
 
 
 def _surround_with(s, wrapper):
