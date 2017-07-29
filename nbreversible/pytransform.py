@@ -70,7 +70,12 @@ def extract_inner_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT
                 break
         if indent_level > 0:
             subnode = subnode.clone()
-            subnode.prefix = subnode.prefix.replace(liftup_visitor.indent.value, "", 1)
+            indent_space = liftup_visitor.indent.value
+            if subnode.prefix:
+                subnode.prefix = "\n".join(
+                    (line[len(indent_space):] if line.startswith(indent_space) else line)
+                    for line in subnode.prefix.split("\n")
+                )
             if subnode.type != syms.simple_stmt:
                 liftup_visitor.visit(subnode)
             yield subnode
