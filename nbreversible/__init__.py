@@ -2,5 +2,5 @@ import contextlib
 
 
 @contextlib.contextmanager
-def code():
+def code(language="python"):
     yield

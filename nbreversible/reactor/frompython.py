@@ -1,17 +1,17 @@
 import os
 import traceback
 import contextlib
-from ..langhelpers import reify
 from .. import parselib
+from .. import pytransform
+from .base import Reactor
 
 
-class PyReactor:
-    def __init__(self, filename):
-        self.filename = filename
+class PyReactor(Reactor):
+    """convert python code to something"""
 
-    @reify
-    def subject(self):
-        return parselib.parse_file(self.filename)
+    def iterate(self):
+        t = parselib.parse_file(self.filename)
+        return pytransform.cell_events(t)
 
     @contextlib.contextmanager
     def markdown(self, need_execute):

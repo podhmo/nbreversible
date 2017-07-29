@@ -15,6 +15,7 @@ except IOError:
 
 install_requires = [
     'jupyter',
+    'prestring',
 ]
 
 docs_extras = []
