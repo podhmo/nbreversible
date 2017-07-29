@@ -24,15 +24,22 @@ class PyReactor(Reactor):
             with event.markdown(buf):
                 if need_execute and event.name == "python":
                     out = StringIO()
+                    err = StringIO()
                     try:
                         with contextlib.redirect_stdout(out):
-                            exec("".join(map(str, buf)), g)
+                            with contextlib.redirect_stderr(err):
+                                exec("".join(map(str, buf)), g)
                     except:
                         out.write(traceback.format_exc(limit=5).replace(os.getenv("HOME"), "~"))
 
                     output = out.getvalue().strip()
                     if output:
                         print("\n#", "\n# ".join(output.split("\n")))
+                    erroutput = err.getvalue().strip()
+                    if erroutput:
+                        if not output:
+                            print("")
+                        print("#!", "\n#! ".join(erroutput.split("\n")))
 
         yield reaction
 
