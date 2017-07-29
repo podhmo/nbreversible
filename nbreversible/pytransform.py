@@ -144,6 +144,10 @@ class Collector:
         event, prev_event = (event or self.guess_event(stmt)), self.prev
         self.prev = event
         if event == self.events.MARKDOWN:
+            if stmt.prefix.lstrip(" ").startswith("#"):
+                stmt = stmt.clone()
+                self.current.add(Leaf(token.COMMENT, stmt.prefix))
+                stmt.prefix = ""
             self.consume()
             self.current = event()
             self.current.add(stmt)
