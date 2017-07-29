@@ -20,28 +20,50 @@ class IPYNBReactor(Reactor):
     @contextlib.contextmanager
     def python(self, need_execute):
         prev = None
-        m = Module()
-        sm = m.submodule()
+        m = Module(import_unique=True)
+        sm = None
+        prepared = False
+
+        def _emit_code(m, source):
+            for line in source.split("\n"):
+                if line.startswith("%"):
+                    m.stmt("# {}".format(line))
+                else:
+                    m.stmt(line)
 
         def reaction(cell):
-            nonlocal prev
+            nonlocal prev, sm, prepared
             typ = cell["cell_type"]
 
             if prev is not None:
                 m.sep()
 
+            source = cell["source"]
+
             if typ == "markdown":
                 m.stmt('"""')
-                m.stmt(cell["source"])
+                m.stmt(source)
                 m.stmt('"""')
             elif typ == "code":  # xxx: see cell["language"]
-                if prev is None or prev == typ:
-                    sm.stmt("from nbreversible import code")
-                    with m.with_("code"):
-                        for line in (cell["source"]):
-                            m.append(line)
-                for line in (cell["source"]):
-                    m.append(line)
+                if sm is None:
+                    sm = m.submodule()
+
+                if "import" in source and "nbreversible" in source and "code" in source and "from" in source:
+                    prepared = True
+                    sm.clear()
+
+                if prev is None or prev != typ:
+                    _emit_code(m, source)
+                else:
+                    if not prepared:
+                        sm.from_("nbreversible", "code")
+
+                    cm = m.submodule(newline=False)
+                    with cm.with_("code()"):
+                        _emit_code(cm, source)
+                    if "\n" not in str(cm):
+                        cm.clear()
+
             prev = typ
 
         yield reaction
