@@ -5,14 +5,15 @@ from nbreversible.reactor import get_reactor
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src")
-    parser.add_argument(
-        "-f", "--format", default="notebook", choices=["markdown", "notebook", "python"]
-    )
+    parser.add_argument("-f", "--format", default=None, choices=["markdown", "notebook", "python"])
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
 
     reactor = get_reactor(args.src)
-    with getattr(reactor, args.format)(args.execute) as reaction:
+    format = args.format
+    if format is None:
+        format = reactor.default_format
+    with getattr(reactor, format)(args.execute) as reaction:
         for args in reactor.iterate():
             reaction(*args)
 

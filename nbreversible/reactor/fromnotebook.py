@@ -6,6 +6,7 @@ from prestring.python import Module
 
 class IPYNBReactor(Reactor):
     """convert ipynb file to something"""
+    default_format = "python"
 
     def iterate(self):
         with open(self.filename) as rf:

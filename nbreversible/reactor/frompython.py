@@ -8,6 +8,7 @@ from .base import Reactor
 
 class PyReactor(Reactor):
     """convert python code to something"""
+    default_format = "notebook"
 
     def iterate(self):
         t = parselib.parse_file(self.filename)
