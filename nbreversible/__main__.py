@@ -7,14 +7,14 @@ from nbreversible import parselib
 
 
 @contextlib.contextmanager
-def markdown(capture):
+def markdown(need_execute):
     from io import StringIO
 
     g = {}
 
     def reaction(event, buf):
         with event.markdown(buf):
-            if capture and event.name == "python":
+            if need_execute and event.name == "python":
                 out = StringIO()
                 try:
                     with contextlib.redirect_stdout(out):
@@ -30,7 +30,7 @@ def markdown(capture):
 
 
 @contextlib.contextmanager
-def notebook(capture):
+def notebook(need_execute):
     from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook, writes_json
 
     notebook = new_notebook()
@@ -63,11 +63,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src")
     parser.add_argument("-f", "--format", default="notebook", choices=["markdown", "notebook"])
-    parser.add_argument("--capture", action="store_true")
+    parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
 
     t = parselib.parse_file(args.src)
-    with globals()[args.format](args.capture) as reaction:
+    with globals()[args.format](args.execute) as reaction:
         for e, buf in pytransform.cell_events(t):
             reaction(e, buf)
 
