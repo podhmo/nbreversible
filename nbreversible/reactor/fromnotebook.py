@@ -25,7 +25,7 @@ class IPYNBReactor(Reactor):
         prepared = False
 
         def _emit_code(m, source):
-            for line in source.split("\n"):
+            for line in source.strip().split("\n"):
                 if line.startswith("%"):
                     m.stmt("# {}".format(line))
                 else:
@@ -42,8 +42,8 @@ class IPYNBReactor(Reactor):
 
             if typ == "markdown":
                 m.stmt('"""')
-                m.stmt(source)
-                m.stmt('"""')
+                m.stmt(source.strip())
+                m.append('"""')
             elif typ == "code":  # xxx: see cell["language"]
                 if sm is None:
                     sm = m.submodule()
