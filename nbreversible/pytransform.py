@@ -87,12 +87,12 @@ class PyCellEvent:
         self.buf = buf or []
 
     def add(self, stmt):
-        self.buf.append(str(stmt))
+        self.buf.append(stmt)
 
     @contextlib.contextmanager
-    def markdown(self, val, file=sys.stdout):
+    def markdown(self, buf, file=sys.stdout):
         print("``` {}".format(self.name), file=file)
-        print("".join(val).strip(), file=file)
+        print("".join(map(str, buf)).strip(), file=file)
         yield
         print("```", file=file)
 
@@ -104,12 +104,12 @@ class MarkdownCellEvent:
         self.buf = buf or []
 
     def add(self, stmt):
-        self.buf.append(str(stmt))
+        self.buf.append(stmt)
 
     @contextlib.contextmanager
-    def markdown(self, val, file=sys.stdout):
+    def markdown(self, buf, file=sys.stdout):
         print("", file=file)
-        print("".join(val).strip().strip("'").strip('"'), file=file)
+        print("".join(map(str, buf)).strip().strip("'").strip('"'), file=file)
         yield
         print("", file=file)
 

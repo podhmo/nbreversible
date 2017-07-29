@@ -18,7 +18,7 @@ def markdown(capture):
                 out = StringIO()
                 try:
                     with contextlib.redirect_stdout(out):
-                        exec("".join(buf), g)
+                        exec("".join(map(str, buf)), g)
                 except:
                     out.write(traceback.format_exc(limit=5).replace(os.getenv("HOME"), "~"))
 
@@ -39,11 +39,19 @@ def notebook(capture):
     def reaction(event, buf):
         nonlocal i
         if event.name == "markdown":
-            output = "".join(buf).strip().strip("'").strip('"')
+            output = "".join(map(str, buf)).strip().strip("'").strip('"')
             notebook["cells"].append(new_markdown_cell(output))
         elif event.name == "python":
             i += 1
-            notebook["cells"].append(new_code_cell("".join(buf), execution_count=i))
+
+            # for jupyter's magic commands (e.g. `# %matplotlib inline`)
+            for node in buf:
+                if node.prefix and node.prefix.lstrip().startswith("#"):
+                    newline = node.prefix.lstrip().lstrip("#").lstrip(" ")
+                    if newline.startswith("%"):
+                        node.prefix = newline
+
+            notebook["cells"].append(new_code_cell("".join(map(str, buf)), execution_count=i))
         else:
             raise NotImplemented(event.name)
 
