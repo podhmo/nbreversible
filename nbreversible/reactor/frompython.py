@@ -70,4 +70,8 @@ class PyReactor(Reactor):
                 raise NotImplemented(event.name)
 
         yield reaction
+
+        if need_execute:
+            from nbconvert.preprocessors.execute import executenb
+            notebook = executenb(notebook)
         print(writes_json(notebook))
