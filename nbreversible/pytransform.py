@@ -39,7 +39,7 @@ class Visitor(StrictPyTreeVisitor):
     visit_for_stmt = visit_try_stmt = visit_if_stmt = visit_funcdef = visit_classdef = visit_decorated
 
     def visit_with_stmt(self, node):
-        if node.children[1].children[0].value == self.marker:
+        if getattr(node.children[1].children[0], "value", None) == self.marker:
             new = True
             for line in extract_inner_block(node):
                 self.collector.collect(line, event=self.collector.events.CODE, new=new)
