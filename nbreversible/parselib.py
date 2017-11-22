@@ -3,6 +3,8 @@ from lib2to3 import pytree
 from lib2to3 import pygram
 from lib2to3.pgen2 import driver
 from lib2to3.pgen2 import token
+from lib2to3.pgen2.parse import ParseError
+
 
 default_driver = driver.Driver(pygram.python_grammar_no_print_statement, convert=pytree.convert)
 
@@ -12,7 +14,14 @@ def parse_string(code, parser_driver=default_driver, *, debug=True):
 
 
 def parse_file(filename, parser_driver=default_driver, *, debug=True):
-    return parser_driver.parse_file(filename, debug=debug)
+    try:
+        return parser_driver.parse_file(filename, debug=debug)
+    except ParseError as e:
+        if "bad input:" not in repr(e):  # work around
+            raise
+        with open(filename) as rf:
+            body = rf.read()
+        return parse_string(body + "\n", parser_driver=parser_driver, debug=debug)
 
 
 def node_name(node):
