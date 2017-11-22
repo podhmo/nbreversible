@@ -1,0 +1,9 @@
+from nbreversible import code
+import pandas as pd
+
+df = pd.read_csv("{{filename}}")
+
+
+with code():
+    abs(df[["impressions"]] - df[["impressions"]]).describe()
+    abs(df[["impressions"]] - df[["impressions"]]).describe()
