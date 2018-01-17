@@ -2,13 +2,16 @@
 from nbreversible import (
     code,
 )
+import json
 import pandas as pd
-from dictknife import loading
 # %matplotlib inline
 
 with code():
     # nested before  ##TODO:support
-    df = pd.DataFrame.from_dict(loading.loadfile("points.json")).set_index("name")
+    with open("points.json") as rf:
+        # nested nested before  ##TODO:support
+        df = pd.DataFrame.from_dict(json.load(rf)).set_index("name")
+        # nested nested after  ##TODO:support
     # nested middle
     df
 

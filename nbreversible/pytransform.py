@@ -41,7 +41,7 @@ class Visitor(StrictPyTreeVisitor):
     def visit_with_stmt(self, node):
         if getattr(node.children[1].children[0], "value", None) == self.marker:
             new = True
-            for line in extract_inner_block(node):
+            for line in squash_block(node):
                 self.collector.collect(line, event=self.collector.events.CODE, new=new)
                 if new:
                     new = False
@@ -52,33 +52,42 @@ class Visitor(StrictPyTreeVisitor):
         self.collector.consume()
 
 
-def extract_inner_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    "))):
+def squash_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    "))):
     found = None
     for c in node.children:
+        if c.type == syms.suite:
+            found = c
+            break
+
         # rescue comment.
         if c.type == token.NAME:
             if c.prefix:
                 yield Leaf(token.COMMENT, c.prefix)
 
-        if c.type == syms.suite:
-            found = c
-            break
-
     indent_level = 0
+    indent_space = liftup_visitor.indent.value
+    indent_size = len(indent_space)
+
     for subnode in found.children:
         if subnode.type == token.INDENT:
             indent_level += 1
+            prefix = subnode.prefix[indent_size:]
+            if prefix:
+                yield Leaf(token.COMMENT, "#@I"+prefix)  # xxx:
             continue
         if subnode.type == token.DEDENT:
             indent_level -= 1
+            prefix = subnode.prefix[indent_size:]
+            if prefix:
+                yield Leaf(token.COMMENT, "#@D"+prefix)  # xxx:
+                # yield Leaf(token.COMMENT, subnode.prefix[len(indent_space) * indent_level:])  # xxx:
             if indent_level <= 0:
                 break
         if indent_level > 0:
             subnode = subnode.clone()
-            indent_space = liftup_visitor.indent.value
             if subnode.prefix:
                 subnode.prefix = "\n".join(
-                    (line[len(indent_space):] if line.startswith(indent_space) else line)
+                    (line[indent_size:] if line.startswith(indent_space) else line)
                     for line in subnode.prefix.split("\n")
                 )
             if subnode.type != syms.simple_stmt:
