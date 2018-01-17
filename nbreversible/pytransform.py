@@ -55,6 +55,11 @@ class Visitor(StrictPyTreeVisitor):
 def extract_inner_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    "))):
     found = None
     for c in node.children:
+        # rescue comment.
+        if c.type == token.NAME:
+            if c.prefix:
+                yield Leaf(token.COMMENT, c.prefix)
+
         if c.type == syms.suite:
             found = c
             break
@@ -157,9 +162,15 @@ class Collector:
             self.current = event()
             self.current.add(stmt)
         elif new or prev_event != event:
-            self.consume()
-            self.current = event()
-            self.current.add(stmt)
+            if stmt.type == token.COMMENT:
+                # rescue comment.
+                self.consume()
+                self.current.add(stmt)
+                self.current = event()
+            else:
+                self.consume()
+                self.current = event()
+                self.current.add(stmt)
         else:
             self.current.add(stmt)
 
