@@ -10,9 +10,9 @@ import pandas as pd
 with code():
     #@I# nested before  ##TODO:support
     with open("points.json") as rf:
-            # nested nested before  ##TODO:support
+        # nested nested before  ##TODO:support
         df = pd.DataFrame.from_dict(json.load(rf)).set_index("name")
-        # nested nested after  ##TODO:support
+    # nested nested after  ##TODO:support
         # nested middle
         df
     #@I# nested before  ## TODO:support
@@ -20,7 +20,7 @@ with code():
 
 with code():
     def f(x):
-            # nested nested line  ## TODO:support(indent)
+        # nested nested line  ## TODO:support(indent)
         return x * x
 
     # nested middle

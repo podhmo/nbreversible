@@ -19,6 +19,14 @@ class _LiftupVisitor(PyTreeVisitor):
     def visit_DEDENT(self, node):
         node.prefix = node.prefix.replace(self.indent.value, "", 1)
 
+    def default_node_visit(self, node):
+        space = self.indent.value
+        for child in node.children:
+            prefix = child.prefix
+            if prefix and prefix.startswith(space):
+                child.prefix = prefix[len(space):]
+            self.visit(child)
+
 
 class Visitor(StrictPyTreeVisitor):
     def __init__(self, consume, *, marker="code", collector=None):
@@ -76,11 +84,11 @@ def squash_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    
                 yield Leaf(token.COMMENT, "#@I"+prefix)  # xxx:
             continue
         if subnode.type == token.DEDENT:
-            indent_level -= 1
             prefix = subnode.prefix[indent_size:]
             if prefix:
                 yield Leaf(token.COMMENT, "#@D"+prefix)  # xxx:
                 # yield Leaf(token.COMMENT, subnode.prefix[len(indent_space) * indent_level:])  # xxx:
+            indent_level -= 1
             if indent_level <= 0:
                 break
         if indent_level > 0:
