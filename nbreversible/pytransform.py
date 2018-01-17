@@ -1,23 +1,10 @@
+import re
 import sys
 import contextlib
-from .parselib import (
-    StrictPyTreeVisitor,
-    PyTreeVisitor,
-)
+from .parselib import StrictPyTreeVisitor
 from lib2to3.pygram import python_symbols as syms
 from lib2to3.pgen2 import token
 from lib2to3.pytree import Leaf
-
-
-class _LiftupVisitor(PyTreeVisitor):
-    def __init__(self, indent):
-        self.indent = indent
-
-    def visit_INDENT(self, node):
-        node.value = node.value.replace(self.indent.value, "", 1)
-
-    def visit_DEDENT(self, node):
-        node.prefix = node.prefix.replace(self.indent.value, "", 1)
 
 
 class Visitor(StrictPyTreeVisitor):
@@ -41,7 +28,7 @@ class Visitor(StrictPyTreeVisitor):
     def visit_with_stmt(self, node):
         if getattr(node.children[1].children[0], "value", None) == self.marker:
             new = True
-            for line in extract_inner_block(node):
+            for line in squash_block(node):
                 self.collector.collect(line, event=self.collector.events.CODE, new=new)
                 if new:
                     new = False
@@ -52,33 +39,44 @@ class Visitor(StrictPyTreeVisitor):
         self.collector.consume()
 
 
-def extract_inner_block(node, *, liftup_visitor=_LiftupVisitor(Leaf(token.INDENT, "    "))):
+class DedentNode:
+    type = -1  # dummy for pytree.Node
+
+    def __init__(self, node):
+        self.node = node
+
+    @property
+    def prefix(self):
+        return self.node.prefix
+
+    def __str__(self, rx=re.compile("^ +")):
+        internal_string = str(self.node)
+        m = rx.search(internal_string.lstrip("\n"))
+        if m is None:
+            return internal_string
+        indent = m.group(0)
+        indent_size = len(indent)
+        return "\n".join(
+            [
+                line[indent_size:] if line.startswith(indent) else line
+                for line in internal_string.split("\n")
+            ]
+        )
+
+
+def squash_block(node):
     found = None
     for c in node.children:
         if c.type == syms.suite:
             found = c
             break
 
-    indent_level = 0
-    for subnode in found.children:
-        if subnode.type == token.INDENT:
-            indent_level += 1
-            continue
-        if subnode.type == token.DEDENT:
-            indent_level -= 1
-            if indent_level <= 0:
-                break
-        if indent_level > 0:
-            subnode = subnode.clone()
-            indent_space = liftup_visitor.indent.value
-            if subnode.prefix:
-                subnode.prefix = "\n".join(
-                    (line[len(indent_space):] if line.startswith(indent_space) else line)
-                    for line in subnode.prefix.split("\n")
-                )
-            if subnode.type != syms.simple_stmt:
-                liftup_visitor.visit(subnode)
-            yield subnode
+        # rescue comment.
+        if c.type == token.NAME:
+            if c.prefix:
+                yield Leaf(token.COMMENT, "", prefix=c.prefix)
+
+    yield DedentNode(found)
 
 
 def _surround_with(s, wrapper):
@@ -151,15 +149,21 @@ class Collector:
         if event == self.events.MARKDOWN:
             if stmt.prefix.lstrip(" ").startswith("#"):
                 stmt = stmt.clone()
-                self.current.add(Leaf(token.COMMENT, stmt.prefix))
+                self.current.add(Leaf(token.COMMENT, "", prefix=stmt.prefix))
                 stmt.prefix = ""
             self.consume()
             self.current = event()
             self.current.add(stmt)
         elif new or prev_event != event:
-            self.consume()
-            self.current = event()
-            self.current.add(stmt)
+            if stmt.type == token.COMMENT:
+                # rescue comment.
+                self.consume()
+                self.current.add(stmt)
+                self.current = event()
+            else:
+                self.consume()
+                self.current = event()
+                self.current.add(stmt)
         else:
             self.current.add(stmt)
 
