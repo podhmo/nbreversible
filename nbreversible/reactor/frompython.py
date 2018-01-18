@@ -54,7 +54,7 @@ class PyReactor(Reactor):
             nonlocal i
             if event.name == "markdown":
                 output = "".join(map(str, buf)).strip().strip("'").strip('"')
-                notebook["cells"].append(new_markdown_cell(output))
+                notebook["cells"].append(new_markdown_cell(output).strip())
             elif event.name == "python":
                 i += 1
 
@@ -65,7 +65,7 @@ class PyReactor(Reactor):
                         if newline.startswith("%"):
                             node.prefix = newline
 
-                notebook["cells"].append(new_code_cell("".join(map(str, buf)), execution_count=i))
+                notebook["cells"].append(new_code_cell("".join(map(str, buf)).strip(), execution_count=i))
             else:
                 raise NotImplemented(event.name)
 
