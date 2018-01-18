@@ -1,8 +1,9 @@
 class Reactor:
     """almost interface"""
 
-    def __init__(self, filename):
+    def __init__(self, filename, *, input_port=None):
         self.filename = filename
+        self.input_port = input_port
 
     def iterate(self):
         raise NotImplementedError()

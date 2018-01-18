@@ -11,11 +11,14 @@ class PyReactor(Reactor):
     default_format = "notebook"
 
     def iterate(self):
-        t = parselib.parse_file(self.filename)
+        if self.input_port is not None:
+            t = parselib.parse_string(self.input_port.read())
+        else:
+            t = parselib.parse_file(self.filename)
         return pytransform.cell_events(t)
 
     @contextlib.contextmanager
-    def markdown(self, need_execute):
+    def markdown(self, *, need_execute):
         from io import StringIO
 
         g = {}
@@ -44,7 +47,7 @@ class PyReactor(Reactor):
         yield reaction
 
     @contextlib.contextmanager
-    def notebook(self, need_execute):
+    def notebook(self, *, need_execute):
         from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook, writes_json
 
         notebook = new_notebook()
@@ -54,7 +57,7 @@ class PyReactor(Reactor):
             nonlocal i
             if event.name == "markdown":
                 output = "".join(map(str, buf)).strip().strip("'").strip('"')
-                notebook["cells"].append(new_markdown_cell(output).strip())
+                notebook["cells"].append(new_markdown_cell(output))
             elif event.name == "python":
                 i += 1
 

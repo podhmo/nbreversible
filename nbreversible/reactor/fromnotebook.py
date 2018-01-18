@@ -9,17 +9,20 @@ class IPYNBReactor(Reactor):
     default_format = "python"
 
     def iterate(self):
-        with open(self.filename) as rf:
-            nb = nbformat.read(rf, as_version=4)
+        if self.input_port is not None:
+            nb = nbformat.read(self.input_port, as_version=4)
+        else:
+            with open(self.filename) as rf:
+                nb = nbformat.read(rf, as_version=4)
         for cell in nb["cells"]:
             yield (cell, )
 
     @contextlib.contextmanager
-    def markdown(self, need_execute):
+    def markdown(self, *, need_execute):
         raise NotImplementedError(">_<")
 
     @contextlib.contextmanager
-    def python(self, need_execute):
+    def python(self, *, need_execute):
         prev = None
         m = Module(import_unique=True)
         sm = None
